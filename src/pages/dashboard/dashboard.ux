@@ -9,7 +9,12 @@
 					tid="i"
 					style="left: {{ $item.x }}px; top: {{ $item.y }}px"
 				>
-					<text class="clock-char">{{ $item.ch }}</text>
+					<text
+						class="clock-char"
+						style="color: {{ $item.color }}"
+					>
+						{{ $item.ch }}
+					</text>
 				</div>
 			</div>
 			<text class="brand">DeepSeek</text>
@@ -155,6 +160,11 @@ import {
 	stopSync as icStopSync,
 } from "../../common/interconnect-client";
 import { arcClockChars } from "../../common/clock-arc";
+import {
+	isPeakWindow,
+	CLOCK_PEAK_COLOR,
+	CLOCK_NORMAL_COLOR,
+} from "../../common/pricing";
 import { balanceFontClass } from "../../common/balance-font";
 import { resolveSyncConfig } from "../../common/sync-config";
 import { loadCachedSnapshot } from "../../common/cache";
@@ -178,6 +188,7 @@ const SYNC_FRESH_SECS = 180; // 快照 3 分钟内视为「已同步」,超过�
 export default {
 	private: {
 		clockChars: [],
+		peakActive: false, // 当前是否处于高峰计费时段(时钟配色)
 		statusText: "",
 		statusClass: "pill-wait",
 		pillTextColor: "#8a8a8a",
@@ -263,14 +274,32 @@ export default {
 
 	// 时钟:位置/旋转一次性生成,之后只原地更新文本(避免重建数组触发大范围 UI 更新)
 	tickClock() {
-		const text = formatClockHM(new Date());
+		const now = new Date();
+		const text = formatClockHM(now);
+		const peak = isPeakWindow(now);
 		const chars = this.clockChars;
 		if (chars.length === 0) {
-			this.clockChars = arcClockChars(text);
+			const fresh = arcClockChars(text);
+			// 首次生成即带配色(避免首帧颜色闪烁)
+			this.applyPeakColor(fresh, peak);
+			this.clockChars = fresh;
 			return;
 		}
 		for (let i = 0; i < chars.length && i < text.length; i++) {
 			chars[i].ch = text.charAt(i);
+		}
+		// 峰谷切换时原地更新配色(同一状态不重复赋值,减少 UI 更新)
+		if (peak !== this.peakActive) {
+			this.applyPeakColor(chars, peak);
+		}
+	},
+
+	// 时钟配色:高峰时段橘红提示,空闲时段白色
+	applyPeakColor(chars, peak) {
+		this.peakActive = peak;
+		const color = peak ? CLOCK_PEAK_COLOR : CLOCK_NORMAL_COLOR;
+		for (const c of chars) {
+			c.color = color;
 		}
 	},
 
