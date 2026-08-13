@@ -1,0 +1,42 @@
+/* 页面基础:布局骨架与通用状态 */
+.page {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+/* 离线 */
+.dim {
+  opacity: 0.55;
+}
+
+/* 内容 */
+.content {
+  width: 100%;
+  flex-grow: 1;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* 分割线 */
+.divider {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background-color: #2a2d33;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* 区块标题(余额/消费/缓存/用量共用) */
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #8a8a8a;
+  margin-bottom: 12px;
+}

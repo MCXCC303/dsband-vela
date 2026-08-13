@@ -1,0 +1,57 @@
+/* 顶部区域 */
+.topbar {
+  width: 100%;
+  height: 74px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arc-clock {
+  position: relative;
+  width: 100%;
+  height: 40px;
+}
+
+.arc-char-box {
+  position: absolute;
+  width: 14px;
+  height: 22px;
+  justify-content: center;
+  align-items: center;
+}
+
+.clock-char {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* 时间字符旋转类
+   必须显式指定 transform-origin,否则左右字符旋转方向相反地上下偏移 */
+.rot-neg20 {
+  transform: rotate(-20deg);
+  transform-origin: 7px 11px;
+}
+.rot-neg10 {
+  transform: rotate(-10deg);
+  transform-origin: 7px 11px;
+}
+.rot-0 {
+  transform: rotate(0deg);
+  transform-origin: 7px 11px;
+}
+.rot-pos10 {
+  transform: rotate(10deg);
+  transform-origin: 7px 11px;
+}
+.rot-pos20 {
+  transform: rotate(20deg);
+  transform-origin: 7px 11px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: bold;
+  color: #9db8ff;
+  margin-top: 14px;
+}

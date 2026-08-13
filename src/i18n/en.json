@@ -1,0 +1,28 @@
+{
+  "sync": {
+    "current": "Synced",
+    "cached": "Cached · {min} min ago",
+    "cachedDate": "Cached · {date}",
+    "offline": "Offline",
+    "waiting": "Waiting for data",
+    "demo": "DEMO",
+    "noBle": "BLE unavailable"
+  },
+  "balance": {
+    "title": "Balance",
+    "noData": "--"
+  },
+  "cacheRate": "Cache rate",
+  "hitRate": {
+    "noData": "--"
+  },
+  "hit": "Hit {tokens}",
+  "miss": "Miss {tokens}",
+  "today": {
+    "spend": "Today spend"
+  },
+  "models": {
+    "output": "Output {tokens}",
+    "usage": "Model usage"
+  }
+}

@@ -1,0 +1,442 @@
+<template>
+	<div class="page {{ dimClass }}">
+		<!-- 顶部 -->
+		<div class="topbar">
+			<div class="arc-clock">
+				<div
+					class="arc-char-box {{ $item.rotClass }}"
+					for="{{ clockChars }}"
+					tid="i"
+					style="left: {{ $item.x }}px; top: {{ $item.y }}px"
+				>
+					<text class="clock-char">{{ $item.ch }}</text>
+				</div>
+			</div>
+			<text class="brand">DeepSeek</text>
+		</div>
+
+		<!-- 滚动内容 (scroll-y 必须显式开启,默认 false) -->
+		<scroll class="content" scroll-y="true">
+			<!-- 同步状态胶囊 -->
+			<div class="pill {{ statusClass }}">
+				<text class="pill-text" style="color: {{ pillTextColor }}">
+					{{ statusText }}
+				</text>
+			</div>
+
+			<!-- 余额 -->
+			<div class="balance-section">
+				<text class="section-title balance-title">
+					{{ $t("balance.title") }}
+				</text>
+				<text class="balance-main {{ balanceSizeClass }}">
+					{{ balanceText }}
+				</text>
+			</div>
+
+			<div class="divider"></div>
+
+			<!-- 模型总用量占比(Flash 左 / Pro 右;名称一行,数值一行) -->
+			<div class="usage-section">
+				<text class="section-title">{{ $t("models.usage") }}</text>
+				<div class="usage-labels">
+					<text class="usage-label">Flash</text>
+					<text class="usage-label">Pro</text>
+				</div>
+				<div class="usage-labels">
+					<text class="usage-label">{{ flashUsageText }}</text>
+					<text class="usage-label">{{ proUsageText }}</text>
+				</div>
+				<div class="stacked-bar">
+					<div
+						class="stack-seg flash-seg"
+						style="width: {{ flashUsagePercent }}%"
+					></div>
+					<div
+						class="stack-seg pro-seg"
+						style="width: {{ proUsagePercent }}%"
+					></div>
+				</div>
+			</div>
+
+			<div class="divider"></div>
+
+			<!-- 缓存命中率(Pro / Flash 分列) -->
+			<div class="rings-section">
+				<text class="section-title">{{ $t("cacheRate") }}</text>
+				<div class="rings-area">
+					<div class="ring-item">
+						<div class="ring-wrap-sm">
+							<progress
+								class="ring-sm"
+								type="arc"
+								percent="{{ flashHitRatePercent }}"
+								style="color: {{ flashHitRateColor }}"
+							></progress>
+							<div class="ring-center-sm">
+								<text class="ring-label-sm">Flash</text>
+								<text
+									class="ring-value-sm"
+									style="color: {{ flashHitRateColor }}"
+								>
+									{{ flashHitRateText }}
+								</text>
+							</div>
+						</div>
+					</div>
+					<div class="ring-item">
+						<div class="ring-wrap-sm">
+							<progress
+								class="ring-sm"
+								type="arc"
+								percent="{{ proHitRatePercent }}"
+								style="color: {{ proHitRateColor }}"
+							></progress>
+							<div class="ring-center-sm">
+								<text class="ring-label-sm">Pro</text>
+								<text
+									class="ring-value-sm"
+									style="color: {{ proHitRateColor }}"
+								>
+									{{ proHitRateText }}
+								</text>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="divider"></div>
+
+			<!-- 今日消费(Flash / Pro 占比 + 明细) -->
+			<div class="cost-section">
+				<text class="section-title">{{ $t("today.spend") }}</text>
+				<div class="stacked-bar">
+					<div
+						class="stack-seg flash-seg"
+						style="width: {{ flashCostPercent }}%"
+					></div>
+					<div
+						class="stack-seg pro-seg"
+						style="width: {{ proCostPercent }}%"
+					></div>
+				</div>
+				<div class="cost-rows">
+					<text class="cost-row">Flash {{ flashCostText }}</text>
+					<text class="cost-row">Pro {{ proCostText }}</text>
+				</div>
+			</div>
+		</scroll>
+	</div>
+</template>
+
+<style>
+@import "./dashboard.css";
+@import "./topbar.css";
+@import "./pill.css";
+@import "./balance.css";
+@import "./cost.css";
+@import "./ring.css";
+@import "./usage.css";
+@import "./stack.css";
+</style>
+
+<script>
+import {
+	startSync as mockStartSync,
+	stopSync as mockStopSync,
+} from "../../common/mock-client";
+import {
+	startSync as httpStartSync,
+	stopSync as httpStopSync,
+} from "../../common/http-client";
+import {
+	startSync as icStartSync,
+	stopSync as icStopSync,
+} from "../../common/interconnect-client";
+import { arcClockChars } from "../../common/clock-arc";
+import { balanceFontClass } from "../../common/balance-font";
+import { resolveSyncConfig } from "../../common/sync-config";
+import { loadCachedSnapshot } from "../../common/cache";
+import { brighten, restore } from "../../common/screen";
+import {
+	formatMoney,
+	formatTokensCompact,
+	hitRateColor,
+	splitModels,
+	FLASH_HIT_RATE_LOW,
+	FLASH_HIT_RATE_MID,
+	FLASH_HIT_COLORS,
+	minutesAgo,
+	formatCacheDate,
+	formatClockHM,
+} from "../../common/snapshot";
+
+const CLOCK_INTERVAL = 60000;
+const SYNC_FRESH_SECS = 180; // 快照 3 分钟内视为「已同步」,超过显示「缓存」
+
+export default {
+	private: {
+		clockChars: [],
+		statusText: "",
+		statusClass: "pill-wait",
+		pillTextColor: "#8a8a8a",
+		dimClass: "dim",
+		mockFlag: false, // 演示数据模式
+
+		balanceText: "",
+		balanceSizeClass: "balance-f64",
+
+		// 模型总用量占比条
+		proUsageText: "--",
+		flashUsageText: "--",
+		proUsagePercent: 0,
+		flashUsagePercent: 0,
+
+		// 缓存命中率双环
+		proHitRateText: "--",
+		proHitRateColor: "#8a8a8a",
+		proHitRatePercent: 0,
+		flashHitRateText: "--",
+		flashHitRateColor: "#8a8a8a",
+		flashHitRatePercent: 0,
+
+		// 今日消费占比条
+		proCostText: "--",
+		flashCostText: "--",
+		proCostPercent: 0,
+		flashCostPercent: 0,
+
+		lastSnapTime: 0, // 最近渲染的快照 generatedAt(去重,避免重复 UI 更新)
+		gotLiveData: false, // 是否已收到实时数据(收到后跳过缓存渲染)
+	},
+
+	onInit() {
+		// 时钟位置延迟生成(避开启动阶段计算),缓存渲染 800ms 后执行(期间实时数据优先)
+		this.clockTimer = setInterval(() => this.tickClock(), CLOCK_INTERVAL);
+		this.tickTimer = setTimeout(() => this.tickClock(), 50);
+		this.renderEmpty();
+		// 缓存渲染延迟执行(1s 内完成;期间若收到实时数据则跳过,避免重复/覆盖)
+		this.cacheTimer = setTimeout(() => {
+			loadCachedSnapshot((snap) => {
+				if (snap && !this.gotLiveData) this.renderSnapshot(snap);
+			});
+		}, 800);
+	},
+
+	onShow() {
+		// 常亮延迟 500ms 独立执行(与缓存渲染 800ms 错开,避免并发)
+		if (this.brightenTimer) clearTimeout(this.brightenTimer);
+		this.brightenTimer = setTimeout(() => brighten(), 500);
+		this.startSync();
+	},
+
+	onHide() {
+		mockStopSync();
+		httpStopSync();
+		icStopSync();
+		restore();
+	},
+
+	onDestroy() {
+		mockStopSync();
+		httpStopSync();
+		icStopSync();
+		restore();
+		if (this.clockTimer) {
+			clearInterval(this.clockTimer);
+			this.clockTimer = null;
+		}
+		if (this.cacheTimer) {
+			clearTimeout(this.cacheTimer);
+			this.cacheTimer = null;
+		}
+		if (this.tickTimer) {
+			clearTimeout(this.tickTimer);
+			this.tickTimer = null;
+		}
+		if (this.brightenTimer) {
+			clearTimeout(this.brightenTimer);
+			this.brightenTimer = null;
+		}
+	},
+
+	// 时钟:位置/旋转一次性生成,之后只原地更新文本(避免重建数组触发大范围 UI 更新)
+	tickClock() {
+		const text = formatClockHM(new Date());
+		const chars = this.clockChars;
+		if (chars.length === 0) {
+			this.clockChars = arcClockChars(text);
+			return;
+		}
+		for (let i = 0; i < chars.length && i < text.length; i++) {
+			chars[i].ch = text.charAt(i);
+		}
+	},
+
+	// 数据同步
+	startSync() {
+		const cfg = resolveSyncConfig(this.$app);
+		this.mockFlag = cfg.mock;
+
+		const handlers = {
+			onSnapshot: (snap) => {
+				// 去重:相同 generatedAt 的快照不重复渲染(避免连续 UI 更新触发系统卡死)
+				if (this.lastSnapTime === snap.generatedAt) return;
+				this.lastSnapTime = snap.generatedAt;
+				this.gotLiveData = true; // 已收到实时数据,跳过后续缓存渲染
+				this.renderSnapshot(snap);
+			},
+			onOffline: () => {
+				this.setStatus("pill-bad", "#ff7e7e", this.$t("sync.offline"), true);
+			},
+			onUnavailable: () => {
+				this.setStatus("pill-bad", "#ff7e7e", this.$t("sync.noBle"), true);
+			},
+			// interconnect 连接建立后,停掉 http 轮询(interconnect 优先)
+			onOpen: () => {
+				httpStopSync();
+			},
+		};
+
+		if (cfg.mock) {
+			mockStartSync(handlers, { mockScene: cfg.mockScene });
+			return;
+		}
+		if (cfg.transport === "http") {
+			httpStartSync(handlers, { url: cfg.snapshotUrl });
+			return;
+		}
+		if (cfg.transport === "interconnect") {
+			icStartSync(handlers);
+			return;
+		}
+		// auto:interconnect 优先(真机),http 兜底(模拟器);
+		// interconnect 收数/连接后停 http;http 失败不置离线(等待 interconnect 主通道)
+		icStartSync(handlers);
+		httpStartSync(
+			{ onSnapshot: handlers.onSnapshot },
+			{ url: cfg.snapshotUrl }
+		);
+	},
+
+	// 快照 → UI 派生
+	renderSnapshot(snap) {
+		const freshness = snap.freshness;
+		const balance = snap.balance;
+
+		// 同步胶囊 + 灰阶(统一按快照生成时间判断):
+		// - 双源无数据(unavailable)→ 离线
+		// - 其余:3 分钟内 → 已同步;超过 3 分钟 → 缓存(本地缓存读取同样适用)
+		if (freshness === "unavailable") {
+			this.setStatus("pill-bad", "#ff7e7e", this.$t("sync.offline"), true);
+		} else if (Date.now() / 1000 - snap.generatedAt <= SYNC_FRESH_SECS) {
+			const label = this.mockFlag
+				? this.$t("sync.demo") + " · " + this.$t("sync.current")
+				: this.$t("sync.current");
+			this.setStatus("pill-ok", "#67ce91", label, false);
+		} else {
+			const min = minutesAgo(snap.generatedAt);
+			// 超过 99 分钟改显日期(如 8/11):分钟数三位起会超出胶囊宽度
+			if (min !== null && min > 99) {
+				const date = formatCacheDate(snap.generatedAt);
+				this.setStatus(
+					"pill-warn",
+					"#f5c344",
+					this.$t("sync.cachedDate", { date }),
+					true
+				);
+			} else {
+				this.setStatus(
+					"pill-warn",
+					"#f5c344",
+					this.$t("sync.cached", { min: min === null ? 0 : min }),
+					true
+				);
+			}
+		}
+
+		if (balance) {
+			this.balanceText = formatMoney(balance.total);
+			this.balanceSizeClass = balanceFontClass(balance.total);
+		} else {
+			this.balanceText = this.$t("balance.noData");
+			this.balanceSizeClass = "balance-f48";
+		}
+
+		// 模型拆分(Pro / Flash);命中率不再用顶层 cache,改用各模型自己的 hit/miss
+		const { pro, flash } = splitModels(snap.models);
+
+		// 1) 模型总用量占比(用量 = output tokens)
+		const usageTotal = pro.outputTokens + flash.outputTokens;
+		this.proUsageText = formatTokensCompact(pro.outputTokens);
+		this.flashUsageText = formatTokensCompact(flash.outputTokens);
+		this.proUsagePercent =
+			usageTotal > 0 ? (pro.outputTokens / usageTotal) * 100 : 0;
+		this.flashUsagePercent =
+			usageTotal > 0 ? (flash.outputTokens / usageTotal) * 100 : 0;
+
+		// 2) 缓存命中率双环(Pro 用默认阈值;Flash 阈值更低)
+		this.renderRing("pro", pro.hitRate, hitRateColor(pro.hitRate));
+		this.renderRing(
+			"flash",
+			flash.hitRate,
+			hitRateColor(
+				flash.hitRate,
+				FLASH_HIT_RATE_LOW,
+				FLASH_HIT_RATE_MID,
+				FLASH_HIT_COLORS
+			)
+		);
+
+		// 3) 今日消费占比
+		const costTotal = pro.cost + flash.cost;
+		this.proCostText = formatMoney(pro.cost);
+		this.flashCostText = formatMoney(flash.cost);
+		this.proCostPercent = costTotal > 0 ? (pro.cost / costTotal) * 100 : 0;
+		this.flashCostPercent = costTotal > 0 ? (flash.cost / costTotal) * 100 : 0;
+	},
+
+	// 缓存命中率环(单环渲染;rate 为 null 时显示 --)
+	renderRing(prefix, rate, color) {
+		if (rate !== null && rate !== undefined) {
+			this[prefix + "HitRateText"] = String(Math.floor(rate * 100)) + "%";
+			this[prefix + "HitRateColor"] = color;
+			this[prefix + "HitRatePercent"] = Math.floor(rate * 100);
+		} else {
+			this[prefix + "HitRateText"] = this.$t("hitRate.noData");
+			this[prefix + "HitRateColor"] = "#8a8a8a";
+			this[prefix + "HitRatePercent"] = 0;
+		}
+	},
+
+	// 同步胶囊状态统一入口
+	setStatus(pillClass, textColor, text, dim) {
+		this.statusClass = pillClass;
+		this.pillTextColor = textColor;
+		this.statusText = text;
+		this.dimClass = dim ? "dim" : "";
+	},
+
+	// 初始/无数据
+	renderEmpty() {
+		this.setStatus("pill-wait", "#8a8a8a", this.$t("sync.waiting"), true);
+		this.balanceText = this.$t("balance.noData");
+		this.balanceSizeClass = "balance-f48";
+		this.proUsageText = "--";
+		this.flashUsageText = "--";
+		this.proUsagePercent = 0;
+		this.flashUsagePercent = 0;
+		this.proHitRateText = "--";
+		this.proHitRateColor = "#8a8a8a";
+		this.proHitRatePercent = 0;
+		this.flashHitRateText = "--";
+		this.flashHitRateColor = "#8a8a8a";
+		this.flashHitRatePercent = 0;
+		this.proCostText = "--";
+		this.flashCostText = "--";
+		this.proCostPercent = 0;
+		this.flashCostPercent = 0;
+	},
+};
+</script>

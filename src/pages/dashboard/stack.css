@@ -1,0 +1,21 @@
+/* 横向分段堆叠条(今日消费 / 模型用量共用) */
+.stacked-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background-color: #2a2d33;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.stack-seg {
+  height: 12px;
+}
+
+.flash-seg {
+  background-color: #6fa8ff; /* 浅蓝 */
+}
+
+.pro-seg {
+  background-color: #2456d6; /* 深蓝 */
+}

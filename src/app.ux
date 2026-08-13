@@ -1,0 +1,18 @@
+<script>
+  export default {
+    // 全局配置(页面经 $app.$def.data 访问)
+    // transport: auto(真机 interconnect / 模拟器 http)/ http / interconnect / mock
+    data: {
+      mock: false,
+      mockScene: 1,
+      snapshotUrl: 'http://10.0.2.2:17323/snapshot',
+      transport: 'auto',
+    },
+    onCreate() {
+      console.log("app created");
+    },
+    onDestroy() {
+      console.log("app destroyed");
+    },
+  };
+</script>

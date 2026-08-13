@@ -1,0 +1,21 @@
+/* 今日消费占比区块(全部元素居中) */
+.cost-section {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 16px;
+  padding-bottom: 18px;
+}
+
+.cost-rows {
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.cost-row {
+  font-size: 18px;
+  font-weight: bold;
+  color: #c9ced6;
+  margin-top: 2px;
+}

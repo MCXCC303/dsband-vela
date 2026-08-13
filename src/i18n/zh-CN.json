@@ -1,0 +1,28 @@
+{
+  "sync": {
+    "current": "已同步",
+    "cached": "缓存 · {min}分钟前",
+    "cachedDate": "缓存 · {date}",
+    "offline": "离线",
+    "waiting": "等待用量数据",
+    "demo": "演示",
+    "noBle": "BLE 不可用"
+  },
+  "balance": {
+    "title": "余额",
+    "noData": "--"
+  },
+  "cacheRate": "缓存率",
+  "hitRate": {
+    "noData": "--"
+  },
+  "hit": "命中 {tokens}",
+  "miss": "未命中 {tokens}",
+  "today": {
+    "spend": "今日消费"
+  },
+  "models": {
+    "output": "输出 {tokens}",
+    "usage": "模型用量"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "package": "com.deepseek.miband.band",
+  "name": "DSBand",
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "minPlatformVersion": 1200,
+  "icon": "/common/logo.png",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.fetch"
+    },
+    {
+      "name": "system.interconnect"
+    },
+    {
+      "name": "system.file"
+    },
+    {
+      "name": "system.brightness"
+    }
+  ],
+  "config": {
+    "logLevel": "log",
+    "designWidth": "device-width",
+    "data": {
+      "mock": false,
+      "mockScene": 1,
+      "snapshotUrl": "http://10.0.2.2:17323/snapshot"
+    }
+  },
+  "display": {
+    "backgroundColor": "#000000"
+  },
+  "router": {
+    "entry": "pages/dashboard",
+    "pages": {
+      "pages/dashboard": {
+        "component": "dashboard"
+      }
+    }
+  }
+}

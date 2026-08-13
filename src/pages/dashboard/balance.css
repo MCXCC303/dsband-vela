@@ -1,0 +1,51 @@
+/* 余额区块 */
+.balance-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 20px;
+  padding-bottom: 14px;
+}
+
+.balance-title {
+  margin-bottom: 1px;
+}
+
+.balance-main {
+  font-weight: bold;
+  color: #ffffff;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+/* 余额 */
+.balance-f64 {
+  font-size: 64px;
+}
+.balance-f60 {
+  font-size: 60px;
+}
+.balance-f56 {
+  font-size: 56px;
+}
+.balance-f52 {
+  font-size: 52px;
+}
+.balance-f48 {
+  font-size: 48px;
+}
+.balance-f44 {
+  font-size: 44px;
+}
+.balance-f40 {
+  font-size: 40px;
+}
+.balance-f36 {
+  font-size: 36px;
+}
+.balance-f32 {
+  font-size: 32px;
+}
+.balance-f28 {
+  font-size: 28px;
+}

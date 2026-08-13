@@ -1,0 +1,27 @@
+/* 同步状态胶囊 */
+.pill {
+  padding-left: 18px;
+  padding-right: 18px;
+  height: 32px;
+  border-radius: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+.pill-text {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.pill-ok {
+  background-color: rgba(103, 206, 145, 0.18);
+}
+.pill-warn {
+  background-color: rgba(245, 195, 68, 0.18);
+}
+.pill-bad {
+  background-color: rgba(255, 126, 126, 0.18);
+}
+.pill-wait {
+  background-color: rgba(138, 138, 138, 0.18);
+}

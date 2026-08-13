@@ -1,0 +1,21 @@
+/* 模型总用量占比区块 */
+.usage-section {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 16px;
+  padding-bottom: 14px;
+}
+
+.usage-labels {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.usage-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+}
