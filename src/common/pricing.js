@@ -22,24 +22,24 @@ export const PEAK_WINDOWS = [
 export const CLOCK_PEAK_COLOR = '#ff6b4a'
 export const CLOCK_NORMAL_COLOR = '#ffffff'
 
-// 各模型峰谷定价(元/百万 tokens)
+// 各模型峰谷定价(元/百万 tokens),prev 为价格变动前
 export const PRICING_MODELS = [
   {
     name: 'deepseek-v4-flash',
     short: 'flash',
     rows: [
-      { key: 'cacheHit', off: 0.05, peak: 0.1 },
-      { key: 'cacheMiss', off: 1.5, peak: 3.0 },
-      { key: 'output', off: 4.5, peak: 9.0 },
+      { key: 'cacheHit', prev: 0.02, off: 0.05, peak: 0.1 },
+      { key: 'cacheMiss', prev: 1, off: 1.5, peak: 3.0 },
+      { key: 'output', prev: 2, off: 4.5, peak: 9.0 },
     ],
   },
   {
     name: 'deepseek-v4-pro',
     short: 'pro',
     rows: [
-      { key: 'cacheHit', off: 0.15, peak: 0.3 },
-      { key: 'cacheMiss', off: 4.5, peak: 9.0 },
-      { key: 'output', off: 13.5, peak: 27.0 },
+      { key: 'cacheHit', prev: 0.025, off: 0.15, peak: 0.3 },
+      { key: 'cacheMiss', prev: 3, off: 4.5, peak: 9.0 },
+      { key: 'output', prev: 6, off: 13.5, peak: 27.0 },
     ],
   },
 ]

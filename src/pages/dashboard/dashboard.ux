@@ -8,10 +8,10 @@
 					<!-- 顶部(随内容滚动) -->
 					<div class="topbar">
 						<div class="arc-clock">
+							<!-- 注意:勿加 tid。键从 0 开始时,首个键 0(falsy)会导致首字符补丁失效 -->
 							<div
 								class="arc-char-box {{ $item.rotClass }}"
 								for="{{ clockChars }}"
-								tid="i"
 								style="left: {{ $item.x }}px; top: {{ $item.y }}px"
 							>
 								<text
@@ -158,13 +158,19 @@
 					<div class="pricing-model-block" for="model in pricingModels" tid="name">
 						<text class="pricing-model-name">{{ model.name }}</text>
 						<div class="pricing-table">
+							<!-- 变动前价格 -->
 							<div class="pricing-row">
-								<div class="pricing-cell" for="p in model.off">
+								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.prev">
+									<text class="pricing-cell-text pricing-cell-text-prev">{{ p }}</text>
+								</div>
+							</div>
+							<div class="pricing-row">
+								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.off">
 									<text class="pricing-cell-text">{{ p }}</text>
 								</div>
 							</div>
 							<div class="pricing-row">
-								<div class="pricing-cell" for="p in model.peak">
+								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.peak">
 									<text class="pricing-cell-text pricing-cell-text-peak">{{ p }}</text>
 								</div>
 							</div>
@@ -178,10 +184,10 @@
 				<div class="liang-page">
 					<!-- 时间(与第一屏一致) -->
 					<div class="arc-clock">
+						<!-- 注意:勿加 tid。键从 0 开始时,首个键 0(falsy)会导致首字符补丁失效 -->
 						<div
 							class="arc-char-box {{ $item.rotClass }}"
 							for="{{ clockChars }}"
-							tid="i"
 							style="left: {{ $item.x }}px; top: {{ $item.y }}px"
 						>
 							<text class="clock-char" style="color: {{ $item.color }}">{{ $item.ch }}</text>
@@ -279,7 +285,7 @@ import {
 	formatClockHM,
 } from "../../common/snapshot";
 
-const CLOCK_INTERVAL = 60000;
+const CLOCK_INTERVAL = 1000; // 1s tick:分钟跳变/峰谷切换最多延迟 1s,且唤醒后 1s 内自愈
 const SYNC_FRESH_SECS = 180; // 快照 3 分钟内视为「已同步」,超过显示「缓存」
 
 // 滑动变祖器(第三屏)
@@ -296,15 +302,20 @@ function pad(n) {
 }
 
 function formatPrice(n) {
-	if (n < 1) return "¥" + n.toFixed(2);
+	// 单位已由表格上方标题标注(¥/1Mt),单元格仅显示数值
+	// 小于 1 元:保留到分,若第三位小数非零则保留三位(如变动前 0.025)
+	if (n < 1) {
+		const s = n.toFixed(3);
+		return s.slice(-1) === "0" ? s.slice(0, -1) : s;
+	}
 	const s = n.toFixed(1);
-	return "¥" + (s.slice(-2) === ".0" ? s.slice(0, -2) : s);
+	return s.slice(-2) === ".0" ? s.slice(0, -2) : s;
 }
 
 export default {
 	private: {
-		clockChars: [],
-		peakActive: false, // 当前是否处于高峰计费时段(时钟配色)
+		clockText: "--:--", // 时钟源数据(顶层响应式,变更驱动 clockChars 计算属性)
+		clockPeak: false, // 当前是否处于高峰计费时段(时钟配色)
 		statusText: "",
 		statusClass: "pill-wait",
 		pillTextColor: "#8a8a8a",
@@ -353,6 +364,17 @@ export default {
 		gotLiveData: false, // 是否已收到实时数据(收到后跳过缓存渲染)
 	},
 
+	// 计算属性:时钟字符数组由顶层响应式数据派生。
+	// clockText/clockPeak 变化时框架自动重算并刷新视图,无需手动重建数组。
+	computed: {
+		clockChars() {
+			const chars = arcClockChars(this.clockText);
+			const color = this.clockPeak ? CLOCK_PEAK_COLOR : CLOCK_NORMAL_COLOR;
+			for (const c of chars) c.color = color;
+			return chars;
+		},
+	},
+
 	onInit() {
 		this.initPricing();
 		this.initLiang();
@@ -369,6 +391,8 @@ export default {
 	},
 
 	onShow() {
+		// 息屏唤醒会重新触发 onShow,期间定时器可能被挂起 → 立即刷新时钟
+		this.tickClock();
 		if (this.brightenTimer) clearTimeout(this.brightenTimer);
 		this.startSync();
 	},
@@ -410,6 +434,7 @@ export default {
 		);
 		this.pricingModels = PRICING_MODELS.map((m) => ({
 			name: m.short.charAt(0).toUpperCase() + m.short.slice(1),
+			prev: m.rows.map((r) => formatPrice(r.prev)),
 			off: m.rows.map((r) => formatPrice(r.off)),
 			peak: m.rows.map((r) => formatPrice(r.peak)),
 		}));
@@ -527,35 +552,14 @@ export default {
 		}
 	},
 
-	// 时钟:位置/旋转一次性生成,之后只原地更新文本(避免重建数组触发大范围 UI 更新)
+	// 时钟:每秒检查,仅当分钟文本/峰谷状态变化时更新顶层响应式数据
+	// (1s tick 下避免每秒无效赋值触发重绘,字符数组由 computed.clockChars 派生驱动视图)
 	tickClock() {
 		const now = new Date();
 		const text = formatClockHM(now);
 		const peak = isPeakWindow(now);
-		const chars = this.clockChars;
-		if (chars.length === 0) {
-			const fresh = arcClockChars(text);
-			// 首次生成即带配色(避免首帧颜色闪烁)
-			this.applyPeakColor(fresh, peak);
-			this.clockChars = fresh;
-			return;
-		}
-		for (let i = 0; i < chars.length && i < text.length; i++) {
-			chars[i].ch = text.charAt(i);
-		}
-		// 峰谷切换时原地更新配色(同一状态不重复赋值,减少 UI 更新)
-		if (peak !== this.peakActive) {
-			this.applyPeakColor(chars, peak);
-		}
-	},
-
-	// 时钟配色:高峰时段橘红提示,空闲时段白色
-	applyPeakColor(chars, peak) {
-		this.peakActive = peak;
-		const color = peak ? CLOCK_PEAK_COLOR : CLOCK_NORMAL_COLOR;
-		for (const c of chars) {
-			c.color = color;
-		}
+		if (text !== this.clockText) this.clockText = text;
+		if (peak !== this.clockPeak) this.clockPeak = peak;
 	},
 
 	// 数据同步

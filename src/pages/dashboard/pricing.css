@@ -103,7 +103,7 @@
 }
 
 .pricing-cell {
-  flex-grow: 1;
+  flex-grow: 3;
   flex-basis: 0;
   flex-direction: row;
   justify-content: center;
@@ -113,9 +113,19 @@
   border: 1px solid #2a2d33;
 }
 
+/* 首列加宽(4:3:3),容纳 0.025 这类更长数值,避免换行 */
+.pricing-cell-wide {
+  flex-grow: 4;
+}
+
 .pricing-cell-text {
   font-size: 15px;
   color: #ffffff;
+}
+
+/* 变动前价格(表格第一行,灰色) */
+.pricing-cell-text-prev {
+  color: #8a8a8a;
 }
 
 .pricing-cell-text-peak {
