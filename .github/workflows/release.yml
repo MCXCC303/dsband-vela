@@ -1,0 +1,92 @@
+# Release：推送 v* 标签时构建 rpk 并发布 GitHub Release
+#
+# 用法：
+#   git tag v0.1.1 && git push origin v0.1.1
+# 或在 Actions 页面手动触发（输入已存在的 tag 重新发布）。
+#
+# 签名（可选）：release 包需要 sign/ 目录下的证书（sign/release/{private.pem,certificate.pem}
+# 或 sign/{private.pem,certificate.pem}），证书绝不应提交到仓库。如需发布正式签名包：
+#   1. 本地生成签名字节：
+#        tar -czf sign.tar.gz sign/ && base64 -w0 sign.tar.gz | xclip -selection clipboard
+#   2. GitHub 仓库 Settings → Secrets and variables → Actions
+#      新建 secret，名称 SIGN_ARCHIVE，粘贴上面的 base64 内容
+#   3. 未配置该 secret 时，自动退回构建 debug 包（toolkit 内置调试证书签名）。
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag（必须已推送到远端），例如 v0.1.1'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref || github.event.inputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore signing keys (optional)
+        env:
+          SIGN_ARCHIVE: ${{ secrets.SIGN_ARCHIVE }}
+        run: |
+          if [ -n "$SIGN_ARCHIVE" ]; then
+            echo "$SIGN_ARCHIVE" | base64 -d | tar -xz -C .
+            echo "::notice::已从 SIGN_ARCHIVE 恢复 sign/ 签名目录"
+          else
+            echo "::warning::未配置 SIGN_ARCHIVE secret，将回退构建 debug 包"
+          fi
+
+      - name: Build package
+        run: |
+          TAG="${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag }}"
+          VERSION="$(node -p "require('./src/manifest.json').versionName")"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::warning::tag '$TAG' 与 src/manifest.json 的 versionName '$VERSION' 不一致，rpk 文件名以 manifest 为准"
+          fi
+
+          # 与 aiot release 的证书查找顺序一致：sign/release/ 优先，其次 sign/
+          if { [ -f sign/release/private.pem ] && [ -f sign/release/certificate.pem ]; } ||
+             { [ -f sign/private.pem ] && [ -f sign/certificate.pem ]; }; then
+            echo "::notice::检测到签名证书，构建 release 包"
+            npm run release
+          else
+            echo "::warning::未检测到签名证书，构建 debug 包"
+            npm run build
+          fi
+          ls -l dist/
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release '$TAG' 已存在，上传并覆盖 rpk 资产"
+            gh release upload "$TAG" dist/*.rpk --clobber
+          else
+            gh release create "$TAG" dist/*.rpk \
+              --generate-notes \
+              --title "DSBand $TAG"
+          fi

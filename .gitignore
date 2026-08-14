@@ -2,6 +2,9 @@ node_modules
 build
 dist
 
+# 签名证书目录（私钥，严禁提交到仓库）
+/sign
+
 .DS_Store
 Thumbs.db
 

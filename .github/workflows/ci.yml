@@ -1,0 +1,46 @@
+# CI：每次 push / PR 时自动构建并上传 rpk 制品
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # aiot-toolkit 2.0 依赖 @inquirer/prompts@5，要求 Node >= 18
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (.js)
+        run: npm run lint
+
+      # .ux 文件的语法由编译器校验，构建失败即 CI 失败
+      - name: Build RPK (aiot build)
+        run: npm run build
+
+      - name: Upload RPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpk
+          path: dist/*.rpk
+          if-no-files-found: error
