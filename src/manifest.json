@@ -23,6 +23,9 @@
     },
     {
       "name": "system.brightness"
+    },
+    {
+      "name": "system.storage"
     }
   ],
   "config": {

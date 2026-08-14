@@ -24,5 +24,16 @@
   "models": {
     "output": "输出 {tokens}",
     "usage": "模型用量"
+  },
+  "pricing": {
+    "title": "峰谷定价",
+    "backHint": "右滑返回",
+    "peakHours": "高峰时段",
+    "unit": "价格（¥/1Mt）"
+  },
+  "liang": {
+    "titlePrefix": "滑动变",
+    "titleKeyword": "祖",
+    "titleSuffix": "器"
   }
 }

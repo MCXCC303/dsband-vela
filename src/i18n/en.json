@@ -24,5 +24,16 @@
   "models": {
     "output": "Output {tokens}",
     "usage": "Model usage"
+  },
+  "pricing": {
+    "title": "Peak Pricing",
+    "backHint": "Swipe right to go back",
+    "peakHours": "Peak hours",
+    "unit": "Price (¥/1Mt)"
+  },
+  "liang": {
+    "titlePrefix": "Slide to ",
+    "titleKeyword": "Ancestor",
+    "titleSuffix": ""
   }
 }

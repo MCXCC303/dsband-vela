@@ -22,6 +22,28 @@ export const PEAK_WINDOWS = [
 export const CLOCK_PEAK_COLOR = '#ff6b4a'
 export const CLOCK_NORMAL_COLOR = '#ffffff'
 
+// 各模型峰谷定价(元/百万 tokens)
+export const PRICING_MODELS = [
+  {
+    name: 'deepseek-v4-flash',
+    short: 'flash',
+    rows: [
+      { key: 'cacheHit', off: 0.05, peak: 0.1 },
+      { key: 'cacheMiss', off: 1.5, peak: 3.0 },
+      { key: 'output', off: 4.5, peak: 9.0 },
+    ],
+  },
+  {
+    name: 'deepseek-v4-pro',
+    short: 'pro',
+    rows: [
+      { key: 'cacheHit', off: 0.15, peak: 0.3 },
+      { key: 'cacheMiss', off: 4.5, peak: 9.0 },
+      { key: 'output', off: 13.5, peak: 27.0 },
+    ],
+  },
+]
+
 /** 北京时间小时(与设备时区无关,统一按 UTC+8 换算) */
 export function beijingHour(date) {
   return new Date(date.getTime() + BEIJING_OFFSET_MS).getUTCHours()

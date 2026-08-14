@@ -6,9 +6,17 @@
   background-color: #000000;
 }
 
-/* 离线 */
-.dim {
-  opacity: 0.55;
+/* 左右滑动容器(主表盘 / 峰谷定价两屏) */
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 单个面板(swiper 的子项) */
+.panel {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
 }
 
 /* 内容 */
@@ -19,7 +27,7 @@
   align-items: center;
   padding-left: 16px;
   padding-right: 16px;
-  padding-top: 20px;
+  padding-top: 0;
   padding-bottom: 20px;
 }
 

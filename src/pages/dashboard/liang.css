@@ -1,0 +1,114 @@
+/* 滑动变祖器(第三屏) */
+
+.liang-page {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+}
+
+.liang-title-row {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 30px;
+}
+
+.liang-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.liang-title-key {
+  color: #6fa8ff; /* 祖字蓝色 */
+}
+
+.liang-body {
+  flex-direction: row;
+  align-items: center;
+  height: 300px;
+}
+
+.liang-track {
+  position: relative;
+  width: 80px;
+  height: 300px;
+  margin-right: 16px;
+}
+
+/* 白色圆角矩形(滑动变阻器本体) */
+.liang-wire {
+  position: absolute;
+  left: 47px;
+  top: 0;
+  width: 30px;
+  height: 300px;
+  background-color: #ffffff;
+  border-radius: 5px;
+}
+
+/* 滑片(金属边框图片在红线左侧,水平对齐) */
+.liang-slider {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 80px;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* 金属光泽圆形边框 */
+.liang-thumb-frame {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: linear-gradient(#f7e6a8, #d4af37, #b8912b);
+  align-items: center;
+  justify-content: center;
+}
+
+.liang-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+}
+
+/* 红线(位置指示,两端各超出矩形 3px) */
+.liang-redline {
+  width: 36px;
+  height: 5px;
+  background-color: #ff3b30;
+  border-radius: 3px;
+}
+
+/* 名称标注(灰色,当前档位高亮) */
+.liang-scale {
+  position: relative;
+  width: 80px;
+  height: 300px;
+}
+
+.liang-label {
+  position: absolute;
+  left: 0;
+  width: 80px;
+  height: 22px;
+  font-size: 18px;
+  color: #8a8a8a;
+  text-align: center;
+}
+
+.liang-label-active {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.liang-current {
+  margin-top: 40px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #6fa8ff;
+}

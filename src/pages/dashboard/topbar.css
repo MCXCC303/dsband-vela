@@ -4,11 +4,12 @@
   height: 74px;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 20px;
 }
 
 .arc-clock {
   position: relative;
-  width: 100%;
+  width: 212px; /* 2 × 时钟圆心 x(106),保证字符水平居中 */
   height: 40px;
 }
 
