@@ -265,7 +265,7 @@ import {
 import { balanceFontClass } from "../../common/balance-font";
 import { resolveSyncConfig } from "../../common/sync-config";
 import { loadCachedSnapshot } from "../../common/cache";
-import { brighten, restore } from "../../common/screen";
+import { restore } from "../../common/screen";
 import {
 	formatMoney,
 	formatTokensCompact,
@@ -356,22 +356,20 @@ export default {
 	onInit() {
 		this.initPricing();
 		this.initLiang();
-		// 时钟位置延迟生成(避开启动阶段计算),缓存渲染 800ms 后执行(期间实时数据优先)
+		// 启动时序:常亮逻辑已移除,不再需要与 brighten(500ms) 错开,整体压缩到 300ms 内完成
 		this.clockTimer = setInterval(() => this.tickClock(), CLOCK_INTERVAL);
-		this.tickTimer = setTimeout(() => this.tickClock(), 50);
+		this.tickTimer = setTimeout(() => this.tickClock(), 0);
 		this.renderEmpty();
-		// 缓存渲染延迟执行(1s 内完成;期间若收到实时数据则跳过,避免重复/覆盖)
+		// 缓存渲染 300ms 内完成(收到实时数据则跳过,避免重复/覆盖)
 		this.cacheTimer = setTimeout(() => {
 			loadCachedSnapshot((snap) => {
 				if (snap && !this.gotLiveData) this.renderSnapshot(snap);
 			});
-		}, 800);
+		}, 300);
 	},
 
 	onShow() {
-		// 常亮延迟 500ms 独立执行(与缓存渲染 800ms 错开,避免并发)
 		if (this.brightenTimer) clearTimeout(this.brightenTimer);
-		this.brightenTimer = setTimeout(() => brighten(), 500);
 		this.startSync();
 	},
 
