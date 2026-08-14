@@ -1,6 +1,6 @@
 <template>
-	<div class="page">
-		<swiper class="swiper" indicator="false" loop="false">
+	<div class="page" @touchstart="onSwipeStart" @touchend="onSwipeEnd">
+		<swiper class="swiper" indicator="false" loop="false" @change="onSwiperChange">
 			<!-- 面板 1:主表盘 -->
 			<div class="panel">
 				<!-- 滚动内容 (scroll-y 必须显式开启,默认 false) -->
@@ -241,6 +241,7 @@
 
 <script>
 import storage from "@system.storage";
+import router from "@system.router";
 import {
 	startSync as mockStartSync,
 	stopSync as mockStopSync,
@@ -343,6 +344,10 @@ export default {
 		liangCurrentText: "",
 		liangDragStartY: -1,
 		liangDragStartPos: 0,
+
+		swipeIndex: 0, // 当前 swiper 页索引
+		swipeStartX: -1, // 第一页右滑检测(触摸起始 X)
+		swipeStartY: -1, // 第一页右滑检测(触摸起始 Y)
 
 		lastSnapTime: 0, // 最近渲染的快照 generatedAt(去重,避免重复 UI 更新)
 		gotLiveData: false, // 是否已收到实时数据(收到后跳过缓存渲染)
@@ -485,6 +490,43 @@ export default {
 		if (this.liangDragStartY < 0) return;
 		this.liangDragStartY = -1;
 		this.saveLiangPos();
+	},
+
+	// 第一页右滑退出应用(swiper 会消费 swipe 事件,改用触摸事件检测方向)
+	onSwiperChange(e) {
+		if (e && e.index != null) {
+			this.swipeIndex = e.index;
+		}
+	},
+
+	getTouchX(evt) {
+		const list = evt && (evt.touches || evt.changedTouches);
+		const t = list && list[0];
+		if (!t) return -1;
+		const x =
+			t.clientX != null ? t.clientX : t.pageX != null ? t.pageX : t.screenX;
+		return x != null ? x : -1;
+	},
+
+	onSwipeStart(evt) {
+		const x = this.getTouchX(evt);
+		const y = this.getTouchY(evt);
+		if (x < 0 || y < 0) return;
+		this.swipeStartX = x;
+		this.swipeStartY = y;
+	},
+
+	onSwipeEnd(evt) {
+		if (this.swipeStartX < 0) return;
+		const x = this.getTouchX(evt);
+		const y = this.getTouchY(evt);
+		const dx = x - this.swipeStartX;
+		const dy = y - this.swipeStartY;
+		this.swipeStartX = -1;
+		// 仅在第一页(index 0):手指向右滑动 ≥125px,且 Y 轴偏移 ≤50px 时退出
+		if (this.swipeIndex === 0 && x >= 0 && dx > 125 && Math.abs(dy) <= 50) {
+			router.back();
+		}
 	},
 
 	// 时钟:位置/旋转一次性生成,之后只原地更新文本(避免重建数组触发大范围 UI 更新)
