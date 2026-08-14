@@ -362,6 +362,7 @@ export default {
 
 		lastSnapTime: 0, // 最近渲染的快照 generatedAt(去重,避免重复 UI 更新)
 		gotLiveData: false, // 是否已收到实时数据(收到后跳过缓存渲染)
+		lastSnap: null, // 最近一次渲染的快照(供 tickClock 周期刷新胶囊新鲜度)
 	},
 
 	// 计算属性:时钟字符数组由顶层响应式数据派生。
@@ -560,6 +561,8 @@ export default {
 		const peak = isPeakWindow(now);
 		if (text !== this.clockText) this.clockText = text;
 		if (peak !== this.clockPeak) this.clockPeak = peak;
+		// 周期刷新同步胶囊:无新快照时,超时后自动从「已同步」过渡到「缓存 · X分钟前」
+		this.applyPill(this.lastSnap);
 	},
 
 	// 数据同步
@@ -610,37 +613,11 @@ export default {
 
 	// 快照 → UI 派生
 	renderSnapshot(snap) {
-		const freshness = snap.freshness;
 		const balance = snap.balance;
 
-		// 同步胶囊 + 灰阶(统一按快照生成时间判断):
-		// - 双源无数据(unavailable)→ 离线
-		// - 其余:3 分钟内 → 已同步;超过 3 分钟 → 缓存(本地缓存读取同样适用)
-		if (freshness === "unavailable") {
-			this.setStatus("pill-bad", "#ff7e7e", this.$t("sync.offline"));
-		} else if (Date.now() / 1000 - snap.generatedAt <= SYNC_FRESH_SECS) {
-			const label = this.mockFlag
-				? this.$t("sync.demo") + " · " + this.$t("sync.current")
-				: this.$t("sync.current");
-			this.setStatus("pill-ok", "#67ce91", label);
-		} else {
-			const min = minutesAgo(snap.generatedAt);
-			// 超过 99 分钟改显日期(如 8/11):分钟数三位起会超出胶囊宽度
-			if (min !== null && min > 99) {
-				const date = formatCacheDate(snap.generatedAt);
-				this.setStatus(
-					"pill-warn",
-					"#f5c344",
-					this.$t("sync.cachedDate", { date })
-				);
-			} else {
-				this.setStatus(
-					"pill-warn",
-					"#f5c344",
-					this.$t("sync.cached", { min: min === null ? 0 : min })
-				);
-			}
-		}
+		// 同步胶囊(按快照生成时间派生,见 applyPill)
+		this.lastSnap = snap;
+		this.applyPill(snap);
 
 		if (balance) {
 			this.balanceText = formatMoney(balance.total);
@@ -693,6 +670,43 @@ export default {
 			this[prefix + "HitRateText"] = this.$t("hitRate.noData");
 			this[prefix + "HitRateColor"] = "#8a8a8a";
 			this[prefix + "HitRatePercent"] = 0;
+		}
+	},
+
+	// 同步胶囊文案(按快照生成时间派生):
+	// - 双源无数据(unavailable)→ 离线
+	// - 3 分钟内 → 已同步;超过 3 分钟 → 缓存(本地缓存读取同样适用)
+	// 仅状态变化时写入顶层数据,可安全地每秒调用(tickClock 周期刷新)
+	applyPill(snap) {
+		if (!snap) return;
+		let pillClass, textColor, text;
+		if (snap.freshness === "unavailable") {
+			pillClass = "pill-bad";
+			textColor = "#ff7e7e";
+			text = this.$t("sync.offline");
+		} else if (Date.now() / 1000 - snap.generatedAt <= SYNC_FRESH_SECS) {
+			pillClass = "pill-ok";
+			textColor = "#67ce91";
+			text = this.mockFlag
+				? this.$t("sync.demo") + " · " + this.$t("sync.current")
+				: this.$t("sync.current");
+		} else {
+			const min = minutesAgo(snap.generatedAt);
+			pillClass = "pill-warn";
+			textColor = "#f5c344";
+			// 超过 99 分钟改显日期(如 8/11):分钟数三位起会超出胶囊宽度
+			if (min !== null && min > 99) {
+				text = this.$t("sync.cachedDate", { date: formatCacheDate(snap.generatedAt) });
+			} else {
+				text = this.$t("sync.cached", { min: min === null ? 0 : min });
+			}
+		}
+		if (
+			text !== this.statusText ||
+			pillClass !== this.statusClass ||
+			textColor !== this.pillTextColor
+		) {
+			this.setStatus(pillClass, textColor, text);
 		}
 	},
 
