@@ -1,6 +1,6 @@
 /** 余额/今日消费动态字号 */
 
-const MAX_WIDTH = 176
+const MAX_WIDTH = 165
 const SIZES = [64, 60, 56, 52, 48, 44, 40, 36, 32, 28]
 
 export function balanceFontClass(total, maxSize) {
