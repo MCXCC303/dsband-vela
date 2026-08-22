@@ -486,7 +486,7 @@ export default {
 	},
 
 	getTouchY(evt) {
-		const list = evt && (evt.touches || evt.changedTouches);
+		const list = evt && (evt.changedTouches || evt.touches);
 		const t = list && list[0];
 		if (!t) return -1;
 		const y =
@@ -524,7 +524,7 @@ export default {
 	},
 
 	getTouchX(evt) {
-		const list = evt && (evt.touches || evt.changedTouches);
+		const list = evt && (evt.changedTouches || evt.touches);
 		const t = list && list[0];
 		if (!t) return -1;
 		const x =
@@ -547,8 +547,8 @@ export default {
 		const dx = x - this.swipeStartX;
 		const dy = y - this.swipeStartY;
 		this.swipeStartX = -1;
-		// 仅在第一页(index 0):手指向右滑动 ≥125px,且 Y 轴偏移 ≤50px 时退出
-		if (this.swipeIndex === 0 && x >= 0 && dx > 125 && Math.abs(dy) <= 50) {
+		// 仅在第一页(index 0):手指向右滑动 ≥75px,且 Y 轴偏移 ≤25px 时退出
+		if (this.swipeIndex === 0 && x >= 0 && dx > 75 && Math.abs(dy) <= 25) {
 			router.back();
 		}
 	},
