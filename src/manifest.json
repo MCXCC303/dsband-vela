@@ -1,8 +1,8 @@
 {
   "package": "io.github.mcxcc303.dsband.band",
   "name": "DSBand",
-  "versionName": "0.2.0",
-  "versionCode": 2,
+  "versionName": "0.2.1",
+  "versionCode": 3,
   "minPlatformVersion": 1200,
   "icon": "/common/logo.png",
   "deviceTypeList": [
