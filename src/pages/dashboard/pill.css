@@ -25,3 +25,13 @@
 .pill-wait {
   background-color: rgba(138, 138, 138, 0.18);
 }
+
+/* 设备形态覆盖:方形宽屏(pro) */
+.pill-w {
+  height: 36px;
+  border-radius: 18px;
+}
+
+.pill-text-w {
+  font-size: 20px;
+}

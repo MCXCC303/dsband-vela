@@ -112,3 +112,10 @@
   font-weight: bold;
   color: #6fa8ff;
 }
+
+/* 设备形态覆盖:方形宽屏(pro) */
+.liang-title-row-w { margin-bottom: 24px; }
+.liang-current-w {
+  margin-top: 30px;
+  font-size: 26px;
+}

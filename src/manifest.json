@@ -26,6 +26,9 @@
     },
     {
       "name": "system.storage"
+    },
+    {
+      "name": "system.device"
     }
   ],
   "config": {

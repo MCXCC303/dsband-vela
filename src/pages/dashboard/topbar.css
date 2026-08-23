@@ -56,3 +56,11 @@
   color: #9db8ff;
   margin-top: 14px;
 }
+
+/* 平面时钟(pro 方形宽屏;窄屏胶囊屏用弧形时钟) */
+.clock-flat {
+  font-size: 30px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+}

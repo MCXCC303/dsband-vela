@@ -48,3 +48,15 @@
   color: #8a8a8a;
   margin-bottom: 12px;
 }
+
+/* 设备形态覆盖:方形宽屏(pro) */
+.divider-w {
+  height: 6px;
+  border-radius: 3px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.section-title-w {
+  font-size: 24px;
+}

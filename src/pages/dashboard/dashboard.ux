@@ -7,7 +7,10 @@
 				<scroll class="content" scroll-y="true">
 					<!-- 顶部(随内容滚动) -->
 					<div class="topbar">
-						<div class="arc-clock">
+						<!-- 宽屏(pro 方形屏):平面时钟 -->
+						<text class="clock-flat" if="{{ useFlatClock }}" style="color: {{ clockColor }}">{{ clockText }}</text>
+						<!-- 窄屏(9/10/10NFC 胶囊屏):弧形时钟 -->
+						<div class="arc-clock" else>
 							<!-- 注意:勿加 tid。键从 0 开始时,首个键 0(falsy)会导致首字符补丁失效 -->
 							<div
 								class="arc-char-box {{ $item.rotClass }}"
@@ -26,15 +29,15 @@
 					</div>
 
 					<!-- 同步状态胶囊 -->
-					<div class="pill {{ statusClass }}">
-						<text class="pill-text" style="color: {{ pillTextColor }}">
+					<div class="pill pill-{{ tier }} {{ statusClass }}">
+						<text class="pill-text pill-text-{{ tier }}" style="color: {{ pillTextColor }}">
 							{{ statusText }}
 						</text>
 					</div>
 
 					<!-- 余额 -->
 					<div class="balance-section">
-						<text class="section-title balance-title">
+						<text class="section-title section-title-{{ tier }} balance-title">
 							{{ $t("balance.title") }}
 						</text>
 						<text class="balance-main {{ balanceSizeClass }}">
@@ -42,11 +45,11 @@
 						</text>
 					</div>
 
-					<div class="divider"></div>
+					<div class="divider divider-{{ tier }}"></div>
 
 					<!-- 模型总用量占比(Flash 左 / Pro 右;名称一行,数值一行) -->
 					<div class="usage-section">
-						<text class="section-title">{{ $t("models.usage") }}</text>
+						<text class="section-title section-title-{{ tier }}">{{ $t("models.usage") }}</text>
 						<div class="usage-labels">
 							<text class="usage-label">Flash</text>
 							<text class="usage-label">Pro</text>
@@ -67,24 +70,24 @@
 						</div>
 					</div>
 
-					<div class="divider"></div>
+					<div class="divider divider-{{ tier }}"></div>
 
 					<!-- 缓存命中率(Pro / Flash 分列) -->
 					<div class="rings-section">
-						<text class="section-title">{{ $t("cacheRate") }}</text>
+						<text class="section-title section-title-{{ tier }}">{{ $t("cacheRate") }}</text>
 						<div class="rings-area">
 							<div class="ring-item">
-								<div class="ring-wrap-sm">
+								<div class="ring-wrap-sm ring-wrap-sm-{{ tier }}">
 									<progress
-										class="ring-sm"
+										class="ring-sm ring-sm-{{ tier }}"
 										type="arc"
 										percent="{{ flashHitRatePercent }}"
 										style="color: {{ flashHitRateColor }}"
 									></progress>
-									<div class="ring-center-sm">
-										<text class="ring-label-sm">Flash</text>
+									<div class="ring-center-sm ring-center-sm-{{ tier }}">
+										<text class="ring-label-sm ring-label-sm-{{ tier }}">Flash</text>
 										<text
-											class="ring-value-sm"
+											class="ring-value-sm ring-value-sm-{{ tier }}"
 											style="color: {{ flashHitRateColor }}"
 										>
 											{{ flashHitRateText }}
@@ -93,17 +96,17 @@
 								</div>
 							</div>
 							<div class="ring-item">
-								<div class="ring-wrap-sm">
+								<div class="ring-wrap-sm ring-wrap-sm-{{ tier }}">
 									<progress
-										class="ring-sm"
+										class="ring-sm ring-sm-{{ tier }}"
 										type="arc"
 										percent="{{ proHitRatePercent }}"
 										style="color: {{ proHitRateColor }}"
 									></progress>
-									<div class="ring-center-sm">
-										<text class="ring-label-sm">Pro</text>
+									<div class="ring-center-sm ring-center-sm-{{ tier }}">
+										<text class="ring-label-sm ring-label-sm-{{ tier }}">Pro</text>
 										<text
-											class="ring-value-sm"
+											class="ring-value-sm ring-value-sm-{{ tier }}"
 											style="color: {{ proHitRateColor }}"
 										>
 											{{ proHitRateText }}
@@ -114,11 +117,11 @@
 						</div>
 					</div>
 
-					<div class="divider"></div>
+					<div class="divider divider-{{ tier }}"></div>
 
 					<!-- 今日消费(Flash / Pro 占比 + 明细) -->
 					<div class="cost-section">
-						<text class="section-title">{{ $t("today.spend") }}</text>
+						<text class="section-title section-title-{{ tier }}">{{ $t("today.spend") }}</text>
 						<div class="stacked-bar">
 							<div
 								class="stack-seg flash-seg"
@@ -139,39 +142,39 @@
 
 			<!-- 面板 2:峰谷定价 -->
 			<div class="panel">
-				<scroll class="pricing-content" scroll-y="true">
+				<scroll class="pricing-content pricing-content-{{ tier }}" scroll-y="true">
 					<div class="pricing-topbar">
-						<text class="pricing-back-hint">{{ $t("pricing.backHint") }}</text>
-						<text class="pricing-title">{{ $t("pricing.title") }}</text>
+						<text class="pricing-back-hint pricing-back-hint-{{ tier }}">{{ $t("pricing.backHint") }}</text>
+						<text class="pricing-title pricing-title-{{ tier }}">{{ $t("pricing.title") }}</text>
 					</div>
 
 					<!-- 高峰时段 -->
 					<div class="pricing-card">
-						<text class="pricing-card-title">{{ $t("pricing.peakHours") }}</text>
-						<text class="pricing-card-text" for="w in peakWindows">{{ w }}</text>
+						<text class="pricing-card-title pricing-card-title-{{ tier }}">{{ $t("pricing.peakHours") }}</text>
+						<text class="pricing-card-text pricing-card-text-{{ tier }}" for="w in peakWindows">{{ w }}</text>
 					</div>
 
-					<div class="pricing-divider"></div>
+					<div class="pricing-divider pricing-divider-{{ tier }}"></div>
 
 					<!-- 各模型峰谷价格 -->
-					<text class="section-title">{{ $t("pricing.unit") }}</text>
-					<div class="pricing-model-block" for="model in pricingModels" tid="name">
-						<text class="pricing-model-name">{{ model.name }}</text>
+					<text class="section-title section-title-{{ tier }}">{{ $t("pricing.unit") }}</text>
+					<div class="pricing-model-block pricing-model-block-{{ tier }}" for="model in pricingModels" tid="name">
+						<text class="pricing-model-name pricing-model-name-{{ tier }}">{{ model.name }}</text>
 						<div class="pricing-table">
 							<!-- 变动前价格 -->
 							<div class="pricing-row">
-								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.prev">
-									<text class="pricing-cell-text pricing-cell-text-prev">{{ p }}</text>
+								<div class="pricing-cell pricing-cell-wide-{{ tier }} {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.prev">
+									<text class="pricing-cell-text pricing-cell-text-{{ tier }} pricing-cell-text-prev">{{ p }}</text>
 								</div>
 							</div>
 							<div class="pricing-row">
-								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.off">
-									<text class="pricing-cell-text">{{ p }}</text>
+								<div class="pricing-cell pricing-cell-wide-{{ tier }} {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.off">
+									<text class="pricing-cell-text pricing-cell-text-{{ tier }}">{{ p }}</text>
 								</div>
 							</div>
 							<div class="pricing-row">
-								<div class="pricing-cell {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.peak">
-									<text class="pricing-cell-text pricing-cell-text-peak">{{ p }}</text>
+								<div class="pricing-cell pricing-cell-wide-{{ tier }} {{ $idx === 0 ? 'pricing-cell-wide' : '' }}" for="p in model.peak">
+									<text class="pricing-cell-text pricing-cell-text-{{ tier }} pricing-cell-text-peak">{{ p }}</text>
 								</div>
 							</div>
 						</div>
@@ -183,7 +186,10 @@
 			<div class="panel">
 				<div class="liang-page">
 					<!-- 时间(与第一屏一致) -->
-					<div class="arc-clock">
+					<!-- 宽屏(pro 方形屏):平面时钟 -->
+					<text class="clock-flat" if="{{ useFlatClock }}" style="color: {{ clockColor }}">{{ clockText }}</text>
+					<!-- 窄屏(9/10/10NFC 胶囊屏):弧形时钟 -->
+					<div class="arc-clock" else>
 						<!-- 注意:勿加 tid。键从 0 开始时,首个键 0(falsy)会导致首字符补丁失效 -->
 						<div
 							class="arc-char-box {{ $item.rotClass }}"
@@ -194,7 +200,7 @@
 						</div>
 					</div>
 
-					<div class="liang-title-row">
+					<div class="liang-title-row liang-title-row-{{ tier }}">
 						<text class="liang-title">{{ $t("liang.titlePrefix") }}</text>
 						<text class="liang-title liang-title-key">{{ $t("liang.titleKeyword") }}</text>
 						<text class="liang-title">{{ $t("liang.titleSuffix") }}</text>
@@ -225,7 +231,7 @@
 						</div>
 					</div>
 
-					<text class="liang-current">{{ liangCurrentText }}</text>
+					<text class="liang-current liang-current-{{ tier }}">{{ liangCurrentText }}</text>
 				</div>
 			</div>
 		</swiper>
@@ -248,6 +254,7 @@
 <script>
 import storage from "@system.storage";
 import router from "@system.router";
+import device from "@system.device";
 import {
 	startSync as mockStartSync,
 	stopSync as mockStopSync,
@@ -360,6 +367,10 @@ export default {
 		swipeStartX: -1, // 第一页右滑检测(触摸起始 X)
 		swipeStartY: -1, // 第一页右滑检测(触摸起始 Y)
 
+		tier: "", // 设备档位:""=10/10NFC(212px 胶囊) "s"=9(192px 胶囊) "w"=pro 方形宽屏
+		useFlatClock: false, // 宽屏(pro)用平面时钟,窄屏用弧形时钟
+		balanceMaxWidth: 165, // 余额字号预算宽度(按档位:s=145 默认=165 w=289)
+
 		lastSnapTime: 0, // 最近渲染的快照 generatedAt(去重,避免重复 UI 更新)
 		gotLiveData: false, // 是否已收到实时数据(收到后跳过缓存渲染)
 		lastSnap: null, // 最近一次渲染的快照(供 tickClock 周期刷新胶囊新鲜度)
@@ -374,11 +385,15 @@ export default {
 			for (const c of chars) c.color = color;
 			return chars;
 		},
+		clockColor() {
+			return this.clockPeak ? CLOCK_PEAK_COLOR : CLOCK_NORMAL_COLOR;
+		},
 	},
 
 	onInit() {
 		this.initPricing();
 		this.initLiang();
+		this.initDeviceProfile();
 		// 启动时序:常亮逻辑已移除,不再需要与 brighten(500ms) 错开,整体压缩到 300ms 内完成
 		this.clockTimer = setInterval(() => this.tickClock(), CLOCK_INTERVAL);
 		this.tickTimer = setTimeout(() => this.tickClock(), 0);
@@ -389,6 +404,25 @@ export default {
 				if (snap && !this.gotLiveData) this.renderSnapshot(snap);
 			});
 		}, 300);
+	},
+
+	// 按屏幕宽度/形状判定档位
+	initDeviceProfile() {
+		device.getInfo({
+			success: (ret) => {
+				const w = ret && ret.screenWidth;
+				const shape = ret && ret.screenShape;
+				let tier = "";
+				if (shape === "rect" || (typeof w === "number" && w >= 300)) {
+					tier = "w";
+				} else if (typeof w === "number" && w > 0 && w <= 200) {
+					tier = "s";
+				}
+				this.tier = tier;
+				this.useFlatClock = tier === "w";
+				this.balanceMaxWidth = tier === "w" ? 289 : tier === "s" ? 145 : 165;
+			},
+		});
 	},
 
 	onShow() {
@@ -621,7 +655,7 @@ export default {
 
 		if (balance) {
 			this.balanceText = formatMoney(balance.total);
-			this.balanceSizeClass = balanceFontClass(balance.total);
+			this.balanceSizeClass = balanceFontClass(balance.total, undefined, this.balanceMaxWidth);
 		} else {
 			this.balanceText = this.$t("balance.noData");
 			this.balanceSizeClass = "balance-f48";
