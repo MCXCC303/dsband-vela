@@ -1,4 +1,7 @@
 {
+  "common": {
+    "back": "Back"
+  },
   "sync": {
     "current": "Synced",
     "cached": "Cached · {min} min ago",

@@ -1,4 +1,7 @@
 {
+  "common": {
+    "back": "返回"
+  },
   "sync": {
     "current": "已同步",
     "cached": "缓存 · {min}分钟前",

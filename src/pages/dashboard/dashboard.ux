@@ -28,6 +28,16 @@
 						<text class="brand">DeepSeek</text>
 					</div>
 
+					<!-- 返回按钮 -->
+					<div
+						class="back-btn back-btn-{{ tier }}"
+						if="{{ showBackBtn }}"
+						onclick="onBackTap"
+					>
+						<text class="back-btn-arrow back-btn-arrow-{{ tier }}">&lt;</text>
+						<text class="back-btn-text back-btn-text-{{ tier }}">{{ $t("common.back") }}</text>
+					</div>
+
 					<!-- 同步状态胶囊 -->
 					<div class="pill pill-{{ tier }} {{ statusClass }}">
 						<text class="pill-text pill-text-{{ tier }}" style="color: {{ pillTextColor }}">
@@ -368,6 +378,7 @@ export default {
 		swipeStartY: -1, // 第一页右滑检测(触摸起始 Y)
 
 		tier: "", // 设备档位:""=10/10NFC(212px 胶囊) "s"=9(192px 胶囊) "w"=pro 方形宽屏
+		showBackBtn: false, // 显式返回按钮
 		useFlatClock: false, // 宽屏(pro)用平面时钟,窄屏用弧形时钟
 		balanceMaxWidth: 165, // 余额字号预算宽度(按档位:s=145 默认=165 w=289)
 
@@ -419,6 +430,7 @@ export default {
 					tier = "s";
 				}
 				this.tier = tier;
+				this.showBackBtn = tier !== ""; // pro/9:系统右滑返回不可用,显示按钮;10/10NFC:不显示
 				this.useFlatClock = tier === "w";
 				this.balanceMaxWidth = tier === "w" ? 289 : tier === "s" ? 145 : 165;
 			},
@@ -585,6 +597,11 @@ export default {
 		if (this.swipeIndex === 0 && x >= 0 && dx > 75 && Math.abs(dy) <= 25) {
 			router.back();
 		}
+	},
+
+	// 显式返回按钮:点击退出应用。
+	onBackTap() {
+		this.$app.exit();
 	},
 
 	// 时钟:每秒检查,仅当分钟文本/峰谷状态变化时更新顶层响应式数据
